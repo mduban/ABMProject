@@ -11,11 +11,12 @@
 display('Start simulation...');     %Started!
 
 %% Initilization
-TIMESTEPS = 1000;
+TIMESTEPS = 200;
 PROPERTIES = 4;         % Properties: 1 - patient(1)/staff(0), 2 - room no., 3 - status: 0 - S, 1 - I, 2 - R
-NSTAFF = 10;
-NPATIENTS = 46;
-WARDSMAP = [1 2 3 2 1; 1 1 2 3 3; 2 2 -1 2 3; 3 2 0 1 3; 2 2 1 3 1;]
+NSTAFF = 15;
+
+WARDSMAP = [3 1 1 1 1; 1 1 1 1 1; 1 1 -1 1 1; 1 1 0 1 1; 1 1 1 1 1;]
+NPATIENTS = sum(sum(WARDSMAP))+1;
 dimensions = size(WARDSMAP);
 wards = zeros(dimensions(1), dimensions(2));
 agents = zeros(NSTAFF+NPATIENTS, PROPERTIES);
@@ -34,11 +35,11 @@ for i=1:1:dimensions(1)*dimensions(2)
 end
 % Probabilities
 infectionPatient=0.1;
-infectionStaff=0.01;
-recoverPatient=0.2;
-recoverStaff=0.5;
-susceptiblePatient=0.2;
-susceptibleStaff=0.1;
+infectionStaff=0.05;
+recoverPatient=0.1;
+recoverStaff=0.9;
+susceptiblePatient=0.8;
+susceptibleStaff=0.9;
 movementProbMat = rand(dimensions(1)*dimensions(2), dimensions(1)*dimensions(2));
 for i=1:1:dimensions(1)*dimensions(2)
     if (WARDSMAP(floor((i-1)/dimensions(1))+1, mod((i-1), dimensions(2))+1)>0)
@@ -51,10 +52,13 @@ for i=1:1:dimensions(1)*dimensions(2)
        movementProbMat(i,j) = sum(movementProbMat(i,1:1:j));
     end
 end
-
+status_data=zeros(TIMESTEPS+1, 3);
 
 %% Iterate over time
 new_agents=agents;
+status_data(1, 1)=sum(agents(:,3)==0);
+status_data(1, 2)=sum(agents(:,3)==1);
+status_data(1, 3)=sum(agents(:,3)==2);
 for tstep=1:1:TIMESTEPS
     tstep
 
@@ -106,10 +110,17 @@ for tstep=1:1:TIMESTEPS
         end
     end
     agents=new_agents;
-end
+
 
 %% Save data
+status_data(tstep+1, 1)=sum(agents(:,3)==0);
+status_data(tstep+1, 2)=sum(agents(:,3)==1);
+status_data(tstep+1, 3)=sum(agents(:,3)==2);
 
+end
+
+plot(status_data);
+legend('Susceptible', 'Infected', 'Recovered');
 
 % Completed!
 display('Success! Simulation completed!');
