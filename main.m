@@ -15,7 +15,7 @@ TIMESTEPS = 200;
 PROPERTIES = 4;         % Properties: 1 - patient(1)/staff(0), 2 - room no., 3 - status: 0 - S, 1 - I, 2 - R
 NSTAFF = 15;
 
-WARDSMAP = [6 1 1 1 1; 1 1 1 1 1; 1 1 -1 1 1; 1 1 0 1 1; 1 1 1 1 1;]
+WARDSMAP = [3 1 1 1 1; 1 1 1 1 1; 1 1 -1 1 1; 1 1 0 1 1; 1 1 1 1 1;]
 NPATIENTS = sum(sum(WARDSMAP))+1;
 dimensions = size(WARDSMAP);
 wards = zeros(dimensions(1), dimensions(2));
@@ -37,9 +37,10 @@ end
 infectionPatient=0.1;
 infectionStaff=0.05;
 recoverPatient=0.1;
-recoverStaff=0.9;
+recoverStaff=0.8;
+recoverStaffCleanRoom=1;
 susceptiblePatient=0.8;
-susceptibleStaff=0.9;
+susceptibleStaff=0.92;
 movementProbMat = rand(dimensions(1)*dimensions(2), dimensions(1)*dimensions(2));
 for i=1:1:dimensions(1)*dimensions(2)
     if (WARDSMAP(floor((i-1)/dimensions(1))+1, mod((i-1), dimensions(2))+1)>0)
@@ -85,7 +86,12 @@ for tstep=1:1:TIMESTEPS
         end
         if(agents(agent,3)==1)
             if(agents(agent,1)==0)
-                if(rand<recoverStaff)
+                tempRecoverStaff=recoverStaff;
+                if(WARDSMAP(floor((agents(agent, 2)-1)/dimensions(1))+1, mod(agents(agent, 2)-1, dimensions(2))+1)==-1)
+                    tempRecoverStaff=recoverStaffCleanRoom;
+                    agents(agent, 4)=0;
+                end
+                if(rand<tempRecoverStaff)
                     new_agents(agent,3)=2;
                 end
             else
@@ -105,8 +111,20 @@ for tstep=1:1:TIMESTEPS
                  end
             end
         end
+        
+        %increase patients visited since cleanroom
+        if(agents(agent,1)==0)
+            agents(agent, 4)=agents(agent, 4)+1;
+        end
+        
         if(agents(agent,1)==0)
             new_agents(agent,2)=find(movementProbMat(agents(agent,2),:)>rand, 1);
+        end
+        
+        if(agents(agent,1)==0)
+            if(agents(agent, 4)/40>rand)
+                new_agents(agent,2)=13;     %Additional probability to go to CLEAN ROOM proportional to number of patients since last cleaning
+            end
         end
     end
     agents=new_agents;
