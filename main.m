@@ -2,7 +2,8 @@
 %   Agent-based modelling course project
 %   Singapore-ETH Centre (SEC)
 %   Future Resilient Systems
-%   Date: 23 October 2015
+%   STABLE release
+%   Date: 1 December 2015
 %   Version: 1.0
 %   Authors:
 %       *   Mateusz Iwo Dubaniowski
