@@ -2,8 +2,7 @@
 %   Agent-based modelling course project
 %   Singapore-ETH Centre (SEC)
 %   Future Resilient Systems
-%   STABLE release
-%   Date: 1 December 2015
+%   Date: 23 October 2015
 %   Version: 1.0
 %   Authors:
 %       *   Mateusz Iwo Dubaniowski
@@ -16,7 +15,7 @@ TIMESTEPS = 200;
 PROPERTIES = 4;         % Properties: 1 - patient(1)/staff(0), 2 - room no., 3 - status: 0 - S, 1 - I, 2 - R
 NSTAFF = 15;
 
-WARDSMAP = [3 1 1 1 1; 1 1 1 1 1; 1 1 -1 1 1; 1 1 0 1 1; 1 1 1 1 1;]
+WARDSMAP = [7 1 1 1 1; 1 1 1 1 1; 1 1 -1 1 1; 1 1 0 1 1; 1 1 1 1 1;]
 NPATIENTS = sum(sum(WARDSMAP))+1;
 dimensions = size(WARDSMAP);
 wards = zeros(dimensions(1), dimensions(2));
@@ -129,16 +128,35 @@ for tstep=1:1:TIMESTEPS
         end
     end
     agents=new_agents;
-
+    
+heatmapMat=zeros(dimensions(1), dimensions(2));
+for localtemp=1:1:dimensions(1)*dimensions(2)
+    heatmapMat(floor((localtemp-1)/dimensions(1))+1, mod(localtemp-1, dimensions(2))+1)=sum(and(agents(:,3)==1, and(agents(:,2)==localtemp, agents(:,1)==1)));
+end
+subplot(2, 1, 1);
+imagesc(heatmapMat);
+caxis([0 max(max(WARDSMAP))]);
+colorbar;
+title('Just the patients heatmap');
 
 %% Save data
 status_data(tstep+1, 1)=sum(agents(:,3)==0);
 status_data(tstep+1, 2)=sum(agents(:,3)==1);
 status_data(tstep+1, 3)=sum(agents(:,3)==2);
 
+subplot(2, 1, 2);
+plot(status_data(1:tstep, :));
+axis([0, TIMESTEPS, 0, NPATIENTS+NSTAFF]);
+title('All agents summary plot');
+legend('Susceptible', 'Infected', 'Recovered');
+
+pause(0.001);
+
 end
 
 plot(status_data);
+axis([0, TIMESTEPS, 0, NPATIENTS+NSTAFF]);
+title('All agents summary plot');
 legend('Susceptible', 'Infected', 'Recovered');
 
 % Completed!
