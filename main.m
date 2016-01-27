@@ -15,11 +15,8 @@ TIMESTEPS = 200;
 PROPERTIES = 4;         % Properties: 1 - patient(1)/staff(0), 2 - room no., 3 - status: 0 - S, 1 - I, 2 - R
 NSTAFF = 15;
 
-<<<<<<< HEAD
 WARDSMAP = [7 1 1 1 1; 1 1 1 1 1; 1 1 -1 1 1; 1 1 0 1 1; 1 1 1 1 1;]
-=======
-WARDSMAP = [3 2 2 2 1; 1 1 1 1 1; 1 1 -1 1 1; 1 1 0 1 1; 1 1 1 1 1;]
->>>>>>> master
+
 NPATIENTS = sum(sum(WARDSMAP))+1;
 dimensions = size(WARDSMAP);
 wards = zeros(dimensions(1), dimensions(2));
