@@ -19,6 +19,7 @@ WARDSMAP = [3 3 3 3 -1; 3 2 2 3 1; 3 3 -1 1 3; 1 3 0 1 1; 3 2 -1 2 1;]      % Ma
 
 NPATIENTS = sum(sum(WARDSMAP))+1;           % Total 
 dimensions = size(WARDSMAP);
+CLEANROOM = 13;                             %Basic cleanroom room no.
 wards = zeros(dimensions(1), dimensions(2));
 agents = zeros(NSTAFF+NPATIENTS, PROPERTIES);       % Agents' properties matrix
 agents(1, 3)=1;
@@ -72,15 +73,16 @@ for tstep=1:1:TIMESTEPS
     for agent=1:1:NSTAFF+NPATIENTS
     
 %% Update agents
+        % Susceptible agents
         if(agents(agent,3)==0)
-           if(agents(agent,1)==0)
+           if(agents(agent,1)==0)   % infect from staff in the same room
                sameroom=find(agents(:,2)==agents(agent,2));
                for i=1:1:length(sameroom)
                    if(agents(i, 3)==1 && rand<infectionStaff)
                        new_agents(agent,3)=1;
                    end
                end
-           else
+           else                     %infect from other patients in the same room
                sameroom=find(agents(:,2)==agents(agent,2));
                for i=1:1:length(sameroom)
                    if(agents(i, 3)==1 && rand<infectionPatient)
@@ -89,9 +91,12 @@ for tstep=1:1:TIMESTEPS
                end
            end
         end
+        
+        % Infected agents 
         if(agents(agent,3)==1)
-            if(agents(agent,1)==0)
+            if(agents(agent,1)==0)  %recover (lose infection/clean) for staff
                 tempRecoverStaff=recoverStaff;
+                %Adjust recovery probability for staff in clean room
                 if(WARDSMAP(floor((agents(agent, 2)-1)/dimensions(1))+1, mod(agents(agent, 2)-1, dimensions(2))+1)==-1)
                     tempRecoverStaff=recoverStaffCleanRoom;
                     agents(agent, 4)=0;
@@ -99,18 +104,20 @@ for tstep=1:1:TIMESTEPS
                 if(rand<tempRecoverStaff)
                     new_agents(agent,3)=2;
                 end
-            else
+            else                    %recover for patients
                  if(rand<recoverPatient)
                     new_agents(agent,3)=2;
                  end
             end
         end
+        
+        %Recovered agents
         if(agents(agent,3)==2)
-            if(agents(agent,1)==0)
+            if(agents(agent,1)==0)  %become susceptible again for staff
                 if(rand<susceptibleStaff)
                     new_agents(agent,3)=0;
                 end
-            else
+            else                    %become susceptible again for patients
                  if(rand<susceptiblePatient)
                     new_agents(agent,3)=0;
                  end
@@ -122,24 +129,26 @@ for tstep=1:1:TIMESTEPS
             agents(agent, 4)=agents(agent, 4)+1;
         end
         
+        %Move staff around according to the movement probability matrix
         if(agents(agent,1)==0)
             new_agents(agent,2)=find(movementProbMat(agents(agent,2),:)>rand, 1);
         end
         
         if(agents(agent,1)==0)
             if(agents(agent, 4)/40>rand)
-                new_agents(agent,2)=13;     %Additional probability to go to CLEAN ROOM proportional to number of patients since last cleaning
+                new_agents(agent,2)=CLEANROOM;     %Additional probability to go to CLEAN ROOM proportional to number of patients since last cleaning
             end
         end
     end
     agents=new_agents;
-    
-heatmapMat=zeros(dimensions(1), dimensions(2));
-for localtemp=1:1:dimensions(1)*dimensions(2)
-    heatmapMat(floor((localtemp-1)/dimensions(1))+1, mod(localtemp-1, dimensions(2))+1)=sum(and(agents(:,3)==1, and(agents(:,2)==localtemp, agents(:,1)==1)));
-end
+
+    % Visualizing the data    
+    heatmapMat=zeros(dimensions(1), dimensions(2));
+    for localtemp=1:1:dimensions(1)*dimensions(2)
+        heatmapMat(floor((localtemp-1)/dimensions(1))+1, mod(localtemp-1, dimensions(2))+1)=sum(and(agents(:,3)==1, and(agents(:,2)==localtemp, agents(:,1)==1)));
+    end
 subplot(2, 1, 1);
-imagesc(heatmapMat);
+imagesc(heatmapMat);        %creating the heatmap
 caxis([0 max(max(WARDSMAP))]);
 colorbar;
 title('Just the patients heatmap');
@@ -150,7 +159,7 @@ status_data(tstep+1, 2)=sum(agents(:,3)==1);
 status_data(tstep+1, 3)=sum(agents(:,3)==2);
 
 subplot(2, 1, 2);
-plot(status_data(1:tstep, :));
+plot(status_data(1:tstep, :));  %creating the graph
 axis([0, TIMESTEPS, 0, NPATIENTS+NSTAFF]);
 title('All agents summary plot');
 legend('Susceptible', 'Infected', 'Recovered');
