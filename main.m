@@ -15,18 +15,19 @@ TIMESTEPS = 200;
 PROPERTIES = 4;         % Properties: 1 - patient(1)/staff(0), 2 - room no., 3 - status: 0 - S, 1 - I, 2 - R
 NSTAFF = 15;
 
-WARDSMAP = [3 3 3 3 -1; 3 2 2 3 1; 3 3 -1 1 3; 1 3 0 1 1; 3 2 -1 2 1;]
+WARDSMAP = [3 3 3 3 -1; 3 2 2 3 1; 3 3 -1 1 3; 1 3 0 1 1; 3 2 -1 2 1;]      % Map of the hospital floor
 
-NPATIENTS = sum(sum(WARDSMAP))+1;
+NPATIENTS = sum(sum(WARDSMAP))+1;           % Total 
 dimensions = size(WARDSMAP);
 wards = zeros(dimensions(1), dimensions(2));
-agents = zeros(NSTAFF+NPATIENTS, PROPERTIES);
+agents = zeros(NSTAFF+NPATIENTS, PROPERTIES);       % Agents' properties matrix
 agents(1, 3)=1;
-new_agents=agents;
-agents(1:1:NPATIENTS, 1)=1;
+new_agents=agents;                                  % Agents' properties matrix for changing of state to a new state
+agents(1:1:NPATIENTS, 1)=1;                                         % Assigning patients property to patients
 for i=NPATIENTS+1:1:NPATIENTS+NSTAFF
-    agents(i, 2)=round((rand*(dimensions(1)*dimensions(2)))+0.5);
+    agents(i, 2)=round((rand*(dimensions(1)*dimensions(2)))+0.5);   % Assigining staff to wards randomly in the beginning
 end
+% Assigning patients to rooms
 temppatient=1;
 for i=1:1:dimensions(1)*dimensions(2)
     for j=1:1:WARDSMAP(floor((i-1)/dimensions(1))+1, mod((i-1), dimensions(2))+1)
@@ -34,7 +35,7 @@ for i=1:1:dimensions(1)*dimensions(2)
         temppatient=temppatient+1;
     end
 end
-% Probabilities
+% Probabilities of various events
 infectionPatient=0.1;
 infectionStaff=0.05;
 recoverPatient=0.1;
@@ -48,6 +49,7 @@ for i=1:1:dimensions(1)*dimensions(2)
         movementProbMat(:,i)=movementProbMat(:,i)*WARDSMAP(floor((i-1)/dimensions(1))+1, mod((i-1), dimensions(2))+1);
     end
 end
+% Normalizing the movement probability matrix
 for i=1:1:dimensions(1)*dimensions(2)
     movementProbMat(i,:) = movementProbMat(i,:)/sum(movementProbMat(i,:));
     for j=dimensions(1)*dimensions(2):-1:1
@@ -58,6 +60,8 @@ status_data=zeros(TIMESTEPS+1, 3);
 
 %% Iterate over time
 new_agents=agents;
+
+% Keeping data for visualisation
 status_data(1, 1)=sum(agents(:,3)==0);
 status_data(1, 2)=sum(agents(:,3)==1);
 status_data(1, 3)=sum(agents(:,3)==2);
