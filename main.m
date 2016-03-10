@@ -151,7 +151,7 @@ subplot(2, 1, 1);
 imagesc(heatmapMat);        %creating the heatmap
 caxis([0 max(max(WARDSMAP))]);
 colorbar;
-title('Just the patients heatmap');
+title('Heatmap of patients status');
 
 %% Save data
 status_data(tstep+1, 1)=sum(agents(:,3)==0);
